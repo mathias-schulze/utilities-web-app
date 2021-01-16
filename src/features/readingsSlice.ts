@@ -1,9 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AppThunk, RootState } from '../app/store';
-import { POWER, GAS } from '../App'
+import { firestore } from '../app/Firebase'
+import moment from 'moment'
 
 export type Reading = {
-  id: string,
   type: string,
   date: number,
   value: number,
@@ -32,12 +32,12 @@ export const readingsSlice = createSlice({
       state.addDialogvisible = false;
     },
     addReading: (state, action: PayloadAction<Reading>) => {
-      action.payload.id = action.payload.type + "-" + action.payload.date;
-      if (action.payload.type === POWER) {
-        state.powerList = [...state.powerList, action.payload];
-      } else if (action.payload.type === GAS) {
-        state.gasList = [...state.gasList, action.payload];
-      }
+      var collection = action.payload.type;
+      firestore.collection(collection).add({
+        date: moment(action.payload.date).format('yyyy-MM-DD'),
+        timestamp: action.payload.date,
+        value: action.payload.value
+      });
     },
   },
 });
@@ -45,9 +45,6 @@ export const readingsSlice = createSlice({
 export const { openAddDialog, closeAddDialog, addReading } = readingsSlice.actions;
 
 export const isAddDialogVisible = (state: RootState) => state.readings.addDialogvisible;
-
-export const getPowerList = (state: RootState) => state.readings.powerList;
-export const getGasList = (state: RootState) => state.readings.gasList;
 
 export const addReadingAsync = (reading: Reading): AppThunk => dispatch => {
   setTimeout(() => {
